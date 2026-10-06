@@ -25,8 +25,11 @@ OBJECT_INFO_FIRST_RETRY_SECONDS = 10.0  # while not loaded yet (ComfyUI still st
 
 
 class QueueService:
-    def __init__(self, client: ComfyClient):
+    def __init__(self, client: ComfyClient, candidates: Optional[List[str]] = None):
+        """`candidates`: other ComfyUI base URLs to try when `client` is unreachable
+        (auto-detect mode, e.g. portable on :8188 vs. ComfyUI Desktop on :8000)."""
         self.client = client
+        self.candidates = list(candidates or [])
         self.catalog = NodeCatalog()
         self.vm = QueueViewModel()
         self._lock = threading.Lock()
@@ -71,6 +74,23 @@ class QueueService:
     def start(self):
         self._maybe_load_object_info(force=True)
 
+    def _rediscover(self) -> bool:
+        """Switch to another candidate URL that answers. Called while unreachable."""
+        for url in self.candidates:
+            if url == self.client.base_url:
+                continue
+            try:
+                ComfyClient(url, timeout=1.0).get_queue_remaining()
+            except ComfyUnavailable:
+                continue
+            self.client.base_url = url
+            self.catalog = NodeCatalog()  # a different server may have other nodes
+            self.vm.clear_cache()
+            self._unknown_seen = set()
+            self._object_info_last_try = 0.0
+            return True
+        return False
+
     # ---------------------------------------------------------- snapshot
 
     def snapshot(self, force: bool = False) -> Dict[str, Any]:
@@ -103,6 +123,8 @@ class QueueService:
                 self._error = "Unable to read queue."
                 self._items = []
                 self._last_remaining = None
+                if self._rediscover():
+                    self._maybe_load_object_info(force=True)
             except QueueFormatError as exc:
                 self._error = f"Unable to read queue. Unexpected format: {exc}"
                 self._items = []
@@ -125,5 +147,6 @@ class QueueService:
                 "running": running,
                 "pending": len(self._items) - running,
                 "typeInfo": self.catalog.available,
+                "comfyUrl": self.client.base_url,
                 "items": self._items,
             }

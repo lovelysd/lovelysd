@@ -21,27 +21,51 @@ ComfyUI 안에 설치하지 않으므로, ComfyUI를 업데이트·재설치해�
 ## 설치 및 실행 (Windows 11)
 
 **필요한 것:** Python 3.9 이상. 추가 패키지는 없습니다 (표준 라이브러리만 사용).
-ComfyUI portable을 쓰고 있다면 그 안의 `python_embeded\python.exe`를 그대로 써도 됩니다.
+별도 Python이 없어도 ComfyUI에 들어 있는 Python을 자동으로 찾아 씁니다.
 
-1. 이 `comfyui-queue-inspector` 폴더를 원하는 곳에 복사합니다 (예: `C:\Tools\comfyui-queue-inspector`).
-   ComfyUI 폴더 안에 넣을 필요는 없습니다.
-2. ComfyUI를 평소처럼 실행합니다.
+1. 이 `comfyui-queue-inspector` 폴더를 원하는 곳에 복사합니다
+   (예: `C:\Apps\ComfyUI\comfyui-queue-inspector`). `custom_nodes` 안에만 넣지 않으면 됩니다.
+2. ComfyUI를 평소처럼 실행합니다. (Inspector를 먼저 켜도 됩니다. ComfyUI가 켜지면 자동으로 연결됩니다.)
 3. `start_inspector.bat`을 더블클릭합니다. 브라우저 탭이 자동으로 열립니다 (`http://127.0.0.1:8190/`).
 4. 종료: 검은 콘솔 창에서 `Ctrl+C` 또는 창 닫기.
 
-**Python을 따로 설치하지 않은 경우:** `start_inspector.bat`을 메모장으로 열어 아래 줄을 수정합니다.
+### 설치 점검: `check_inspector.bat`
 
-```bat
-set "PYEXE=C:\ComfyUI_windows_portable\python_embeded\python.exe"
-```
+더블클릭하면 아무것도 바꾸지 않고 다음을 점검해 결과를 보여줍니다.
 
-**ComfyUI 주소/포트가 다른 경우:** 같은 파일의 `COMFY` 값을 바꿉니다 (기본 `http://127.0.0.1:8188`).
+| 항목 | 내용 |
+|---|---|
+| 1. 파일 | 모든 파일이 릴리스와 **바이트 단위로 같은지** SHA256으로 비교. 빠진 파일, 수정·손상된 파일, 이전 버전 파일을 구분해 표시 |
+| 2. Python | `start_inspector.bat`과 같은 순서로 찾고 버전(3.9 이상) 확인 |
+| 3. ComfyUI | 8188, 8000 포트에 응답하는지, 현재 큐 개수 |
+| 4. 포트 8190 | 다른 프로그램이 쓰고 있는지 |
+| 5. 다운로드 표시 | SmartScreen 경고 원인이 되는 "인터넷에서 받은 파일" 표시가 있는지 |
+| 6. 단위 테스트 | 전체 테스트 실행 |
+
+### 자동으로 찾는 것
+
+| 항목 | 찾는 순서 | 직접 지정 (`start_inspector.bat` 메모장으로 열기) |
+|---|---|---|
+| Python | ① 폴더 옆 ComfyUI의 Python (`..\python_embeded`, `..\..\python_embeded`, `..\.venv`, `..\venv`) → ② `py` 런처 → ③ PATH의 `python` (Microsoft Store 가짜 실행 파일은 제외) | `set "PYEXE=C:\...\python.exe"` |
+| ComfyUI 주소 | `127.0.0.1:8188` (portable/수동 설치) → `127.0.0.1:8000` (ComfyUI Desktop 앱) | `set "COMFY=http://127.0.0.1:8188"` |
+
+콘솔 첫 줄에 `Using Python: ...`, 그 아래 `ComfyUI : ...`로 실제 사용 중인 값이 표시됩니다.
+화면 오른쪽 위 연결 표시(●)에 마우스를 올려도 연결된 ComfyUI 주소가 보입니다.
+
+### Windows에서 알아둘 점
+
+- **"Windows의 PC 보호" (SmartScreen) 경고:** 인터넷(Google Drive 등)에서 받은 `.bat`은 처음 실행할 때 경고가 뜰 수 있습니다.
+  `추가 정보 → 실행`을 누르거나, 파일 속성에서 `차단 해제`를 체크하면 됩니다.
+- **방화벽 경고는 뜨지 않는 것이 정상입니다.** `127.0.0.1`(이 PC 내부)에만 열기 때문입니다.
+- **포트 충돌:** `Cannot listen on 127.0.0.1:8190` 메시지가 나오면 다른 프로그램이 8190을 쓰는 중입니다.
+  `start_inspector.bat --port 8191`처럼 실행하세요.
 
 명령줄로 직접 실행할 수도 있습니다.
 
 ```
-python inspector.py --comfy http://127.0.0.1:8188 --port 8190
-python inspector.py --no-browser        # 브라우저 자동 열기 끄기
+python inspector.py                                  # ComfyUI 주소 자동 감지
+python inspector.py --comfy http://127.0.0.1:8188    # 주소 고정
+python inspector.py --no-browser --port 8191
 ```
 
 ## 구조
@@ -106,6 +130,7 @@ python -m unittest discover -s tests
 - `tests/test_parsing.py`: 큐 형식, 순서, 프롬프트 역할 판별, 모델, 이미지, 300개 작업 성능
 - `tests/test_real_fixture.py`: **실제 ComfyUI(2026-10-05 master)에서 캡처한** `/queue`·`/object_info` 데이터로 검증
 - `tests/test_server.py`: HTTP API, 읽기 전용(405), 이미지 중계, ComfyUI 꺼짐 상태, 경로 탐색 차단
+- `tests/test_discovery.py`: ComfyUI 주소 자동 감지 (8188 ↔ 8000 전환)
 
 ComfyUI 없이 화면을 확인하려면 모의 서버를 쓸 수 있습니다.
 

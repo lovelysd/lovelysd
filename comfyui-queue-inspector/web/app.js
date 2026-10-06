@@ -164,13 +164,14 @@
       banner.hidden = false;
       conn.className = "conn err";
       $("conn-text").textContent = "ComfyUI unreachable";
+      conn.title = `Trying ComfyUI at ${snap.comfyUrl}`;
     } else {
       banner.hidden = true;
       conn.className = "conn ok";
       $("conn-text").textContent = "Connected";
-      conn.title = snap.typeInfo
-        ? "Connected to ComfyUI. Node type info loaded."
-        : "Connected to ComfyUI. Node type info not loaded yet; prompt roles use name-based fallback.";
+      conn.title = `Connected to ComfyUI at ${snap.comfyUrl}. ` + (snap.typeInfo
+        ? "Node type info loaded."
+        : "Node type info not loaded yet; prompt roles use name-based fallback.");
     }
     $("counts").replaceChildren(
       "Running ", el("b", { text: String(snap.running) }), " · Pending ", el("b", { text: String(snap.pending) }));

@@ -180,6 +180,16 @@ comfyui-queue-inspector/
 └─ tools/mock_comfy.py   mock ComfyUI for development and demos
 ```
 
+**[new]** Auto-detection on Windows:
+
+- **Python:** the launcher tries ComfyUI's own Python next to the folder
+  (`python_embeded`, `.venv`, `venv`), then the `py` launcher, then `python` on PATH.
+  It skips the Microsoft Store stub in `WindowsApps`.
+- **ComfyUI address:** without `--comfy`, the inspector tries `127.0.0.1:8188`
+  (portable or manual install), then `127.0.0.1:8000` (ComfyUI Desktop app).
+  While the current address is unreachable it keeps switching to whichever
+  candidate answers.
+
 Runs with ComfyUI portable's embedded Python. Its `._pth` file disables adding
 the script directory to `sys.path`, so `inspector.py` adds the directory itself.
 
