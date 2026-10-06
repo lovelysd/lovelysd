@@ -1,0 +1,1425 @@
+{
+ "queue_running": [
+  [
+   0,
+   "20d972b2-fe12-4cbd-9942-2a048cdbadb2",
+   {
+    "1": {
+     "class_type": "QITestSleep",
+     "inputs": {
+      "seconds": 3000
+     },
+     "_meta": {
+      "title": "QITestSleep"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "f420a6cf-e926-4441-baf6-f46cd67a36f8",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249694676
+   },
+   [
+    "1"
+   ]
+  ]
+ ],
+ "queue_pending": [
+  [
+   -11,
+   "1a623d52-7dc5-4c52-a5af-c21816e2bea0",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "sdxl/juggernautXL_v9.safetensors"
+     },
+     "_meta": {
+      "title": "Load Checkpoint"
+     }
+    },
+    "10": {
+     "class_type": "LoraLoader",
+     "inputs": {
+      "lora_name": "detail_tweaker.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 1.0,
+      "model": [
+       "4",
+       0
+      ],
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "LoraLoader"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "front job 2: very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text ",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Positive Prompt"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "low quality, blurry",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Negative Prompt"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "seed": 1,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "model": [
+       "10",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "latent_image": [
+       "5",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "8": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "9": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+       "8",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "c65821b8-d0e4-4eb8-8411-2052a02256b2",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249702305
+   },
+   [
+    "9"
+   ]
+  ],
+  [
+   -10,
+   "24348b18-d762-4978-9179-d91e2909cf3e",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "sdxl/juggernautXL_v9.safetensors"
+     },
+     "_meta": {
+      "title": "Load Checkpoint"
+     }
+    },
+    "10": {
+     "class_type": "LoraLoader",
+     "inputs": {
+      "lora_name": "detail_tweaker.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 1.0,
+      "model": [
+       "4",
+       0
+      ],
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "LoraLoader"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "front job 1: very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text ",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Positive Prompt"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "low quality, blurry",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Negative Prompt"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "seed": 1,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "model": [
+       "10",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "latent_image": [
+       "5",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "8": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "9": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+       "8",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "e90be318-f87e-4f4a-801b-a3efb526c809",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249702303
+   },
+   [
+    "9"
+   ]
+  ],
+  [
+   -8,
+   "376fad38-615b-4ca0-9a04-6e07976fa0ab",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "model.safetensors"
+     },
+     "_meta": {
+      "title": "CheckpointLoaderSimple"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "sunset over mountains",
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "CLIPTextEncode"
+     }
+    },
+    "30": {
+     "class_type": "ConditioningZeroOut",
+     "inputs": {
+      "conditioning": [
+       "6",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "ConditioningZeroOut"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "model": [
+       "4",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "30",
+       0
+      ],
+      "latent_image": [
+       "5",
+       0
+      ],
+      "seed": 1,
+      "steps": 20,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "90": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "91": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "qi",
+      "images": [
+       "90",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "800521cf-5482-494f-8a53-0c638b88aa73",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249702301
+   },
+   [
+    "91"
+   ]
+  ],
+  [
+   -9,
+   "0942cf2f-aedf-4937-ac85-e75017a547a5",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "sdxl/juggernautXL_v9.safetensors"
+     },
+     "_meta": {
+      "title": "Load Checkpoint"
+     }
+    },
+    "10": {
+     "class_type": "LoraLoader",
+     "inputs": {
+      "lora_name": "detail_tweaker.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 1.0,
+      "model": [
+       "4",
+       0
+      ],
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "LoraLoader"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "front job 0: very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text very long prompt text ",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Positive Prompt"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "low quality, blurry",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Negative Prompt"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "seed": 1,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "model": [
+       "10",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "latent_image": [
+       "5",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "8": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "9": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+       "8",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "d63ae5d2-28d4-4aae-b30c-a10238af22fc",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249702302
+   },
+   [
+    "9"
+   ]
+  ],
+  [
+   7,
+   "b2ff528d-5a09-4296-97c1-8d004d0ef2cb",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "model.safetensors"
+     },
+     "_meta": {
+      "title": "CheckpointLoaderSimple"
+     }
+    },
+    "20": {
+     "class_type": "StringConcatenate",
+     "inputs": {
+      "string_a": "masterpiece, ",
+      "string_b": "a red fox",
+      "delimiter": ""
+     },
+     "_meta": {
+      "title": "StringConcatenate"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": [
+       "20",
+       0
+      ],
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "CLIPTextEncode"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "ugly",
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "CLIPTextEncode"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "model": [
+       "4",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "latent_image": [
+       "5",
+       0
+      ],
+      "seed": 1,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "90": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "91": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "qi",
+      "images": [
+       "90",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "client_id": "qi-test",
+    "create_time": 1791249702299
+   },
+   [
+    "91"
+   ]
+  ],
+  [
+   3,
+   "58b107af-91ce-4d60-b936-a1dcf95dee9e",
+   {
+    "37": {
+     "class_type": "UNETLoader",
+     "inputs": {
+      "unet_name": "wan2.1_i2v_480p_14B_fp8.safetensors",
+      "weight_dtype": "default"
+     },
+     "_meta": {
+      "title": "UNETLoader"
+     }
+    },
+    "38": {
+     "class_type": "CLIPLoader",
+     "inputs": {
+      "clip_name": "umt5_xxl_fp8.safetensors",
+      "type": "wan",
+      "device": "default"
+     },
+     "_meta": {
+      "title": "CLIPLoader"
+     }
+    },
+    "39": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+     },
+     "_meta": {
+      "title": "VAELoader"
+     }
+    },
+    "49": {
+     "class_type": "CLIPVisionLoader",
+     "inputs": {
+      "clip_name": "clip_vision_h.safetensors"
+     },
+     "_meta": {
+      "title": "CLIPVisionLoader"
+     }
+    },
+    "52": {
+     "class_type": "LoadImage",
+     "inputs": {
+      "image": "IMG_2034.png"
+     },
+     "_meta": {
+      "title": "LoadImage"
+     }
+    },
+    "51": {
+     "class_type": "CLIPVisionEncode",
+     "inputs": {
+      "clip_vision": [
+       "49",
+       0
+      ],
+      "image": [
+       "52",
+       0
+      ],
+      "crop": "none"
+     },
+     "_meta": {
+      "title": "CLIPVisionEncode"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "a woman walking on the beach",
+      "clip": [
+       "38",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "Prompt A"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "static, blurry, worst quality",
+      "clip": [
+       "38",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "Prompt B"
+     }
+    },
+    "50": {
+     "class_type": "WanImageToVideo",
+     "inputs": {
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "vae": [
+       "39",
+       0
+      ],
+      "width": 832,
+      "height": 480,
+      "length": 81,
+      "batch_size": 1,
+      "clip_vision_output": [
+       "51",
+       0
+      ],
+      "start_image": [
+       "52",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "WanImageToVideo"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "seed": 1,
+      "steps": 20,
+      "cfg": 6.0,
+      "sampler_name": "uni_pc",
+      "scheduler": "simple",
+      "denoise": 1.0,
+      "model": [
+       "37",
+       0
+      ],
+      "positive": [
+       "50",
+       0
+      ],
+      "negative": [
+       "50",
+       1
+      ],
+      "latent_image": [
+       "50",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "90": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "39",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "91": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "qi",
+      "images": [
+       "90",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "0882436b-7016-40d7-9519-48dc89748967",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249694689
+   },
+   [
+    "91"
+   ]
+  ],
+  [
+   1,
+   "21a94a5d-90f7-4fce-a506-d8689c94c3d7",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "sdxl/juggernautXL_v9.safetensors"
+     },
+     "_meta": {
+      "title": "Load Checkpoint"
+     }
+    },
+    "10": {
+     "class_type": "LoraLoader",
+     "inputs": {
+      "lora_name": "detail_tweaker.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 1.0,
+      "model": [
+       "4",
+       0
+      ],
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "LoraLoader"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "a cinematic portrait of a cat",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Positive Prompt"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "low quality, blurry",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Negative Prompt"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "seed": 1,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "model": [
+       "10",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "latent_image": [
+       "5",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "8": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "9": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+       "8",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "5328763a-e18a-4570-8735-10115a230fcd",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249694681
+   },
+   [
+    "9"
+   ]
+  ],
+  [
+   4,
+   "cf8cfe3f-3060-4edf-81be-ef9b9d00d8b2",
+   {
+    "12": {
+     "class_type": "UNETLoader",
+     "inputs": {
+      "unet_name": "flux1-dev-fp8.safetensors",
+      "weight_dtype": "default"
+     },
+     "_meta": {
+      "title": "UNETLoader"
+     }
+    },
+    "11": {
+     "class_type": "DualCLIPLoader",
+     "inputs": {
+      "clip_name1": "t5xxl_fp16.safetensors",
+      "clip_name2": "clip_l.safetensors",
+      "type": "flux",
+      "device": "default"
+     },
+     "_meta": {
+      "title": "DualCLIPLoader"
+     }
+    },
+    "10": {
+     "class_type": "VAELoader",
+     "inputs": {
+      "vae_name": "ae.safetensors"
+     },
+     "_meta": {
+      "title": "VAELoader"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncodeFlux",
+     "inputs": {
+      "clip": [
+       "11",
+       0
+      ],
+      "clip_l": "neon city",
+      "t5xxl": "a neon city at night, rain",
+      "guidance": 3.5
+     },
+     "_meta": {
+      "title": "CLIPTextEncodeFlux"
+     }
+    },
+    "26": {
+     "class_type": "FluxGuidance",
+     "inputs": {
+      "conditioning": [
+       "6",
+       0
+      ],
+      "guidance": 3.5
+     },
+     "_meta": {
+      "title": "FluxGuidance"
+     }
+    },
+    "22": {
+     "class_type": "BasicGuider",
+     "inputs": {
+      "model": [
+       "12",
+       0
+      ],
+      "conditioning": [
+       "26",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "BasicGuider"
+     }
+    },
+    "25": {
+     "class_type": "RandomNoise",
+     "inputs": {
+      "noise_seed": 1
+     },
+     "_meta": {
+      "title": "RandomNoise"
+     }
+    },
+    "16": {
+     "class_type": "KSamplerSelect",
+     "inputs": {
+      "sampler_name": "euler"
+     },
+     "_meta": {
+      "title": "KSamplerSelect"
+     }
+    },
+    "17": {
+     "class_type": "BasicScheduler",
+     "inputs": {
+      "model": [
+       "12",
+       0
+      ],
+      "scheduler": "simple",
+      "steps": 20,
+      "denoise": 1.0
+     },
+     "_meta": {
+      "title": "BasicScheduler"
+     }
+    },
+    "27": {
+     "class_type": "EmptySD3LatentImage",
+     "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptySD3LatentImage"
+     }
+    },
+    "13": {
+     "class_type": "SamplerCustomAdvanced",
+     "inputs": {
+      "noise": [
+       "25",
+       0
+      ],
+      "guider": [
+       "22",
+       0
+      ],
+      "sampler": [
+       "16",
+       0
+      ],
+      "sigmas": [
+       "17",
+       0
+      ],
+      "latent_image": [
+       "27",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SamplerCustomAdvanced"
+     }
+    },
+    "90": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "13",
+       0
+      ],
+      "vae": [
+       "10",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "91": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "qi",
+      "images": [
+       "90",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "8951f44a-f2de-4956-8ada-21f0b3ea69ee",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249694692
+   },
+   [
+    "91"
+   ]
+  ],
+  [
+   2,
+   "252d71dc-df1f-4969-8d4f-4e20f1501489",
+   {
+    "4": {
+     "class_type": "CheckpointLoaderSimple",
+     "inputs": {
+      "ckpt_name": "sdxl/juggernautXL_v9.safetensors"
+     },
+     "_meta": {
+      "title": "Load Checkpoint"
+     }
+    },
+    "10": {
+     "class_type": "LoraLoader",
+     "inputs": {
+      "lora_name": "detail_tweaker.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 1.0,
+      "model": [
+       "4",
+       0
+      ],
+      "clip": [
+       "4",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "LoraLoader"
+     }
+    },
+    "6": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "a cinematic portrait of a cat",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Positive Prompt"
+     }
+    },
+    "7": {
+     "class_type": "CLIPTextEncode",
+     "inputs": {
+      "text": "low quality, blurry",
+      "clip": [
+       "10",
+       1
+      ]
+     },
+     "_meta": {
+      "title": "Negative Prompt"
+     }
+    },
+    "5": {
+     "class_type": "EmptyLatentImage",
+     "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+     },
+     "_meta": {
+      "title": "EmptyLatentImage"
+     }
+    },
+    "3": {
+     "class_type": "KSampler",
+     "inputs": {
+      "seed": 1,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "model": [
+       "10",
+       0
+      ],
+      "positive": [
+       "6",
+       0
+      ],
+      "negative": [
+       "7",
+       0
+      ],
+      "latent_image": [
+       "12",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "KSampler"
+     }
+    },
+    "8": {
+     "class_type": "VAEDecode",
+     "inputs": {
+      "samples": [
+       "3",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEDecode"
+     }
+    },
+    "9": {
+     "class_type": "SaveImage",
+     "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+       "8",
+       0
+      ]
+     },
+     "_meta": {
+      "title": "SaveImage"
+     }
+    },
+    "11": {
+     "class_type": "LoadImage",
+     "inputs": {
+      "image": "faces/face_02.png [input]"
+     },
+     "_meta": {
+      "title": "Load Image"
+     }
+    },
+    "12": {
+     "class_type": "VAEEncode",
+     "inputs": {
+      "pixels": [
+       "11",
+       0
+      ],
+      "vae": [
+       "4",
+       2
+      ]
+     },
+     "_meta": {
+      "title": "VAEEncode"
+     }
+    }
+   },
+   {
+    "extra_pnginfo": {
+     "workflow": {
+      "id": "2068b016-5400-4578-95b6-9187da922895",
+      "nodes": []
+     }
+    },
+    "client_id": "qi-test",
+    "create_time": 1791249694685
+   },
+   [
+    "9"
+   ]
+  ]
+ ]
+}

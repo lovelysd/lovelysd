@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Queue Inspector</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="bar-left">
+      <h1>Queue Inspector</h1>
+      <span class="counts" id="counts">—</span>
+    </div>
+    <div class="bar-right">
+      <span class="conn" id="conn" title="Connection to ComfyUI"><i></i><span id="conn-text">Connecting…</span></span>
+      <span class="muted" id="updated"></span>
+      <button class="icon-btn" id="theme-btn" title="Toggle theme" aria-label="Toggle theme">◐</button>
+      <button class="icon-btn" id="refresh-btn" title="Refresh now" aria-label="Refresh now">↻</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="banner" id="banner" hidden></div>
+    <table class="queue" id="queue">
+      <thead>
+        <tr>
+          <th class="c-order">#</th>
+          <th class="c-status">Status</th>
+          <th class="c-id">Prompt ID</th>
+          <th class="c-model">Model</th>
+          <th class="c-image">Input Image</th>
+          <th class="c-actions"></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>Queue is empty.</div>
+  </main>
+
+  <!-- Details modal: prompt + models -->
+  <div class="modal-backdrop" id="details" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="details-title">
+      <div class="modal-head">
+        <div>
+          <h2 id="details-title">Prompt</h2>
+          <button class="id-chip" id="details-id" title="Copy full prompt_id"></button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="copy-all">Copy all</button>
+          <button class="icon-btn" data-close aria-label="Close">✕</button>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="prompt">Prompt</button>
+        <button class="tab" role="tab" data-tab="models">Models</button>
+      </nav>
+      <div class="modal-body" id="details-body"></div>
+    </div>
+  </div>
+
+  <!-- Image preview modal -->
+  <div class="modal-backdrop" id="preview" hidden>
+    <div class="modal modal-image" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+      <div class="modal-head">
+        <div>
+          <h2 id="preview-title"></h2>
+          <div class="muted small" id="preview-path"></div>
+        </div>
+        <button class="icon-btn" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="preview-stage" id="preview-stage"></div>
+      <div class="preview-strip" id="preview-strip"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
