@@ -14,7 +14,9 @@ ComfyUI 안에 설치하지 않으므로, ComfyUI를 업데이트·재설치해�
 - 실행 중 작업 → 대기 작업을 **실제 실행 순서**대로 표시 (자동 새로고침 + ↻ 수동 새로고침)
 - `prompt_id` 앞 8자리 표시, 클릭하면 전체 ID 복사
 - **Model**: 메인 모델(Checkpoint / Diffusion model) 표시, LoRA 개수 배지. 클릭하면 LoRA(강도 포함)·Text encoder·VAE 등 전체 목록
-- **Input Image**: `LoadImage` 파일명 표시, Preview로 이미지 확인 (파일이 없으면 `Image not found`)
+- **Input Image**: `LoadImage` 파일명 표시, Preview로 이미지 확인. 여러 이미지를 받는 로더(`image_paths` 방식, 예: Deno Multi Image Loader, Deno MiniMax H3 Multi Reference Image Loader)는 켜진 이미지를 카드 순서대로 표시.
+  이미지를 찾지 못하면 이유(실행 후 삭제됨, 외부 경로, ComfyUI 연결 안 됨 등)와 "Open in ComfyUI" 버튼을 보여줌
+- **실제로 실행되는 노드만 분석**: 출력에 연결되지 않은 노드(템플릿에 남은 Load Image 등)는 ComfyUI가 실행·검사하지 않으므로 표시에서 제외
 - **Prompt**: Positive / Negative를 그래프 연결로 판별해 분리 표시, 판별할 수 없는 텍스트는 `Other prompt text`로 표시. 섹션별 Copy, Copy all
 - 다크/라이트 테마 (OS 설정을 따르고, ◐ 버튼으로 전환)
 
@@ -117,7 +119,8 @@ python inspector.py --no-browser --port 8191
 - **워크플로우 파일명은 표시하지 않습니다.** 큐 데이터에 파일명이 없기 때문입니다 (대신 Model 표시).
 - 모델 이름이 다른 노드에서 연결되어 들어오면 `(linked)`로 표시됩니다.
 - 프롬프트 텍스트가 커스텀 노드에서 동적으로 생성되면 (예: 랜덤 프롬프트 노드) 큐에 있는 입력값만 보입니다.
-- 입력 이미지는 `LoadImage` 계열만 인식합니다. 비디오 입력 노드는 v2 후보입니다.
+- 입력 이미지는 `LoadImage` 계열과 `image_paths` 방식의 다중 이미지 로더를 인식합니다. 비디오 입력 노드는 v2 후보입니다.
+- 다중 이미지 로더에 입력 폴더 밖의 경로나 URL을 넣은 경우 이름만 표시하고 미리보기는 하지 않습니다 (ComfyUI `/view`가 제공하지 않음).
 - 작업 하나가 끝나고 다른 작업이 추가되는 일이 1.5초 안에 동시에 일어나면, 최대 5초 늦게 반영될 수 있습니다.
 - `/object_info`가 아직 로드되지 않았을 때(ComfyUI 시작 직후)는 이름 기반 규칙으로 판별하며, 로드되면 자동으로 다시 분석합니다.
 

@@ -356,6 +356,7 @@
     const meta = [];
     if (item.workflowId) meta.push(`workflow id ${item.workflowId}`);
     meta.push(`${item.nodeCount} nodes`);
+    if (item.unusedNodeCount) meta.push(`${item.unusedNodeCount} not connected to an output (ignored)`);
     return [el("div", { class: "section" }, list), el("div", { class: "note section", text: meta.join(" · ") })];
   }
 
@@ -375,10 +376,6 @@
     showModal("preview");
   }
 
-  // Core loaders that read from ComfyUI's input (or output) folder, i.e. the
-  // folder /view looks in. Other "LoadImage"-like nodes may use their own folder.
-  const CORE_IMAGE_LOADERS = ["LoadImage", "LoadImageMask", "LoadImageOutput"];
-
   function viewQuery(ref) {
     const q = new URLSearchParams({ filename: ref.filename, type: ref.type });
     if (ref.subfolder) q.set("subfolder", ref.subfolder);
@@ -386,7 +383,8 @@
   }
 
   function missingReason(ref, err) {
-    const core = CORE_IMAGE_LOADERS.includes(ref.classType);
+    // comfyFolder: the server knows this node reads from the folder /view serves.
+    const core = ref.comfyFolder;
     if (!err) return "The inspector server did not answer.";
     if (err.error === "comfy_unreachable") return err.message + ".";
     if (err.error === "not_image") return err.message + ".";
@@ -395,7 +393,7 @@
         ? `ComfyUI has no file with this name in its ${ref.type} folder. ` +
           "ComfyUI checks that the file exists when a job is queued, so it was " +
           "probably moved, renamed or deleted after queuing."
-        : `This node (${ref.classType}) is not ComfyUI's standard Load Image, so it may ` +
+        : `This node (${ref.classType}) is not a loader the inspector knows, so it may ` +
           `read the file from its own folder rather than ComfyUI's ${ref.type} folder.`;
     }
     if (err.comfyStatus === 400 || err.comfyStatus === 403) {
@@ -422,14 +420,24 @@
   function showPreviewImage(idx) {
     const ref = previewItem.inputImages[idx];
     $("preview-title").textContent = ref.isAsset ? ref.raw : ref.filename;
-    $("preview-path").textContent =
-      `${ref.type}/${ref.subfolder ? ref.subfolder + "/" : ""}${ref.isAsset ? "" : ref.filename}` +
-      ` · node #${ref.nodeId} ${ref.classType || ""} (${ref.title})`;
+    const where = ref.external ? ref.raw
+      : `${ref.type}/${ref.subfolder ? ref.subfolder + "/" : ""}${ref.isAsset ? "" : ref.filename}`;
+    $("preview-path").textContent = `${where} · node #${ref.nodeId} ${ref.classType || ""} (${ref.title})`;
     const stage = $("preview-stage");
-    // Load the image only now - never while rendering the table.
-    const img = el("img", { alt: ref.display, src: imageUrl(ref) });
-    img.addEventListener("error", () => showMissing(stage, ref));
-    stage.replaceChildren(img);
+    if (ref.external) {
+      // Absolute path / URL from a multi-source loader: /view cannot serve it.
+      stage.replaceChildren(el("div", { class: "preview-missing" },
+        el("b", { text: "No preview for this source" }),
+        el("span", { text: ref.raw }),
+        el("p", { class: "preview-reason",
+          text: "This image is read from outside ComfyUI's input folder (a local path or URL), " +
+                "which ComfyUI's image viewer cannot serve." })));
+    } else {
+      // Load the image only now - never while rendering the table.
+      const img = el("img", { alt: ref.display, src: imageUrl(ref) });
+      img.addEventListener("error", () => showMissing(stage, ref));
+      stage.replaceChildren(img);
+    }
 
     const strip = $("preview-strip");
     if (previewItem.inputImages.length > 1) {

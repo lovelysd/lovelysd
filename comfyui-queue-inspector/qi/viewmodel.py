@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from .adapter import RawQueueItem, parse_queue
 from .catalog import NodeCatalog
-from .extract import extract_input_images, extract_models, extract_prompts, main_models
+from .extract import extract_input_images, extract_models, extract_prompts, main_models, used_nodes
 
 
 def _workflow_id(extra_data: dict) -> Optional[str]:
@@ -26,18 +26,19 @@ def _workflow_id(extra_data: dict) -> Optional[str]:
 def build_details(raw: RawQueueItem, catalog: NodeCatalog) -> Dict[str, Any]:
     """Expensive, status-independent part of an item (cached by prompt_id)."""
     warnings = list(raw.warnings)
+    used = used_nodes(raw.prompt, raw.outputs)  # ignore nodes that feed no output
     try:
-        prompts = extract_prompts(raw.prompt, catalog)
+        prompts = extract_prompts(raw.prompt, catalog, used)
     except Exception as exc:  # never let one odd graph break the table
         prompts = {"positive": [], "negative": [], "other": []}
         warnings.append(f"prompt extraction failed: {exc}")
     try:
-        models = extract_models(raw.prompt)
+        models = extract_models(raw.prompt, used)
     except Exception as exc:
         models = []
         warnings.append(f"model extraction failed: {exc}")
     try:
-        images = extract_input_images(raw.prompt)
+        images = extract_input_images(raw.prompt, used)
     except Exception as exc:
         images = []
         warnings.append(f"image extraction failed: {exc}")
@@ -49,6 +50,7 @@ def build_details(raw: RawQueueItem, catalog: NodeCatalog) -> Dict[str, Any]:
         "createTime": create_time if isinstance(create_time, (int, float)) else None,
         "workflowId": _workflow_id(raw.extra_data),
         "nodeCount": len(raw.prompt),
+        "unusedNodeCount": len(raw.prompt) - len(used) if used is not None else 0,
         "mainModels": main_models(models),
         "models": models,
         "inputImages": images,

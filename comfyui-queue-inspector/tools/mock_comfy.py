@@ -46,7 +46,8 @@ def _png(w, h, seed):
         chunk(b"IDAT", raw) + chunk(b"IEND", b"")
 
 
-IMAGES = {("", "IMG_2034.png"): _png(640, 400, 1), ("faces", "face_02.png"): _png(400, 520, 2)}
+IMAGES = {("", "IMG_2034.png"): _png(640, 400, 1), ("faces", "face_02.png"): _png(400, 520, 2),
+          ("deno", "ref_face.png"): _png(480, 480, 3), ("", "hero.jpg"): _png(600, 400, 4)}
 
 
 def sample_graphs():
@@ -58,7 +59,7 @@ def sample_graphs():
     multi["53"] = graphs.node("LoadImage", image="faces/face_02.png [input]")
     return [graphs.wan_i2v(), graphs.img2img(), graphs.sdxl_txt2img(), long_g, graphs.flux_guider(),
             graphs.zero_out_negative(), graphs.shared_encoder_and_custom_text(), missing, multi,
-            graphs.string_concat_prompt()]
+            graphs.string_concat_prompt(), graphs.minimax_ref2va()]
 
 
 class State:
@@ -68,9 +69,11 @@ class State:
         self.pending = []
         gs = sample_graphs()
         for n in range(jobs):
-            self.pending.append([n, str(uuid.uuid4()), gs[n % len(gs)],
+            g = gs[n % len(gs)]
+            outputs = [k for k, v in g.items() if v["class_type"] in ("SaveImage", "SaveVideo")]
+            self.pending.append([n, str(uuid.uuid4()), g,
                                  {"create_time": int(time.time() * 1000),
-                                  "extra_pnginfo": {"workflow": {"id": str(uuid.uuid4())}}}, ["9"]])
+                                  "extra_pnginfo": {"workflow": {"id": str(uuid.uuid4())}}}, outputs])
         self.advance()
 
     def advance(self):

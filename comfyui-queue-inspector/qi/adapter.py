@@ -9,7 +9,10 @@ execution.py, 2026-10):
 * `/queue` returns {"queue_running": [...], "queue_pending": [...]}.
 * Each item is a list: [number, prompt_id, prompt, extra_data, outputs_to_execute].
   The server stores a 6th element (sensitive data) but strips it before
-  responding. We read only indices 0..3 and tolerate extra elements.
+  responding. We read only indices 0..4 and tolerate extra elements.
+* `outputs_to_execute` lists the output node ids that passed validation.
+  The prompt graph also contains nodes that feed none of them (e.g. a stray
+  Load Image left in a template); ComfyUI neither validates nor runs those.
 * `queue_pending` is a copy of a Python `heapq` list. Heap order is NOT
   execution order; execution order is ascending `number` (items queued with
   "front" get a negative number). We therefore sort here.
@@ -32,6 +35,7 @@ class RawQueueItem:
     number: Optional[float]
     prompt: dict
     extra_data: dict
+    outputs: List[str] = field(default_factory=list)  # outputs_to_execute
     warnings: List[str] = field(default_factory=list)
 
 
@@ -59,12 +63,16 @@ def _parse_item(item: Any, status: str) -> Optional[RawQueueItem]:
     if not isinstance(extra_data, dict):
         extra_data = {}
 
+    outputs = item[4] if len(item) > 4 else None
+    outputs = [str(o) for o in outputs] if isinstance(outputs, (list, tuple)) else []
+
     return RawQueueItem(
         status=status,
         prompt_id=prompt_id,
         number=number,
         prompt=prompt,
         extra_data=extra_data,
+        outputs=outputs,
         warnings=warnings,
     )
 

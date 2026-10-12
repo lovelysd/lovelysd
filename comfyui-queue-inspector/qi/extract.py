@@ -33,8 +33,11 @@ def _node_sort_key(node_id: str):
         return (1, 0.0, node_id)
 
 
-def _nodes(prompt: dict) -> Dict[str, dict]:
-    return {str(k): v for k, v in prompt.items() if isinstance(v, dict)}
+def _nodes(prompt: dict, used: Optional[Set[str]] = None) -> Dict[str, dict]:
+    nodes = {str(k): v for k, v in prompt.items() if isinstance(v, dict)}
+    if used is not None:
+        nodes = {k: v for k, v in nodes.items() if k in used}
+    return nodes
 
 
 def _class(node: dict) -> str:
@@ -52,6 +55,30 @@ def _title(node: dict) -> str:
     if isinstance(meta, dict) and isinstance(meta.get("title"), str):
         return meta["title"]
     return _class(node)
+
+
+def used_nodes(prompt: dict, outputs: List[str]) -> Optional[Set[str]]:
+    """Ids of the nodes that feed the job's outputs (outputs_to_execute).
+
+    The queued graph also holds nodes connected to no output, e.g. a stray
+    Load Image left in a template. ComfyUI neither validates nor runs those,
+    so their file names may point at files that do not exist. Returns None
+    (= consider every node) when the outputs are unknown.
+    """
+    nodes = _nodes(prompt)
+    stack = [o for o in outputs if o in nodes]
+    if not stack:
+        return None
+    seen: Set[str] = set()
+    while stack:
+        node_id = stack.pop()
+        if node_id in seen:
+            continue
+        seen.add(node_id)
+        for value in _inputs(nodes[node_id]).values():
+            if is_link(value) and str(value[0]) in nodes:
+                stack.append(str(value[0]))
+    return seen
 
 
 # ---------------------------------------------------------------- prompts
@@ -193,9 +220,10 @@ def _entry(nodes: Dict[str, dict], node_id: str, field: str, text: str, note: st
     }
 
 
-def extract_prompts(prompt: dict, catalog: Optional[NodeCatalog] = None) -> dict:
+def extract_prompts(prompt: dict, catalog: Optional[NodeCatalog] = None,
+                    used: Optional[Set[str]] = None) -> dict:
     catalog = catalog or NodeCatalog()
-    nodes = _nodes(prompt)
+    nodes = _nodes(prompt, used)
     tracer = _PromptTracer(nodes, catalog)
 
     for node_id in sorted(nodes, key=_node_sort_key):
@@ -313,8 +341,8 @@ def _strength(inputs: dict) -> Optional[str]:
     return ", ".join(parts) if parts else None
 
 
-def extract_models(prompt: dict) -> List[dict]:
-    nodes = _nodes(prompt)
+def extract_models(prompt: dict, used: Optional[Set[str]] = None) -> List[dict]:
+    nodes = _nodes(prompt, used)
     out: List[dict] = []
     for node_id in sorted(nodes, key=_node_sort_key):
         node = nodes[node_id]
@@ -388,28 +416,70 @@ def parse_image_ref(value: str, default_type: str = "input") -> dict:
     }
 
 
-def extract_input_images(prompt: dict) -> List[dict]:
-    nodes = _nodes(prompt)
+# Nodes that keep several images as newline-separated paths in "image_paths"
+# (e.g. Deno Multi Image Loader / MiniMax H3 Multi Reference Image Loader).
+# Paths are relative to ComfyUI's input folder; "disabled_image_paths" lists
+# the ones switched off in the node's gallery.
+MULTI_PATH_FIELD = "image_paths"
+MULTI_PATH_DISABLED_FIELD = "disabled_image_paths"
+_EXTERNAL_RE = re.compile(r"^(?:[a-zA-Z]:[\\/]|[\\/]|[a-zA-Z][a-zA-Z0-9+.-]*://)")
+
+
+def _split_lines(value: Any) -> List[str]:
+    if not isinstance(value, str):
+        return []
+    return [line.strip() for line in value.splitlines() if line.strip()]
+
+
+def _multi_path_refs(node: dict) -> List[dict]:
+    inputs = _inputs(node)
+    disabled = set(_split_lines(inputs.get(MULTI_PATH_DISABLED_FIELD)))
+    refs = []
+    for path in _split_lines(inputs.get(MULTI_PATH_FIELD)):
+        if path in disabled:
+            continue
+        if _EXTERNAL_RE.match(path):
+            # Absolute path, folder or URL: outside ComfyUI's folders, /view cannot serve it.
+            name = re.split(r"[\\/]", path.rstrip("/\\"))[-1] or path
+            refs.append({"raw": path, "filename": name, "subfolder": "", "type": "input",
+                         "display": name, "isAsset": False, "external": True})
+        else:
+            refs.append(parse_image_ref(path))
+    return refs
+
+
+def extract_input_images(prompt: dict, used: Optional[Set[str]] = None) -> List[dict]:
+    nodes = _nodes(prompt, used)
     out: List[dict] = []
     seen = set()
     for node_id in sorted(nodes, key=_node_sort_key):
         node = nodes[node_id]
         cls = _class(node)
-        known = cls in IMAGE_LOADER_CLASSES
-        if not known and "loadimage" not in cls.lower():
-            continue
-        value = _inputs(node).get("image")
-        if not isinstance(value, str) or not value:
-            continue
-        if not known and not (value.startswith("blake3:") or
-                              _ANNOTATION_RE.sub("", value).lower().endswith(IMAGE_EXTENSIONS)):
-            continue
-        if value in seen:
-            continue
-        seen.add(value)
-        ref = parse_image_ref(value, "output" if cls == "LoadImageOutput" else "input")
-        ref["nodeId"] = node_id
-        ref["title"] = _title(node)
-        ref["classType"] = cls
-        out.append(ref)
+        refs: List[dict] = []
+        if isinstance(_inputs(node).get(MULTI_PATH_FIELD), str):
+            refs = _multi_path_refs(node)
+            known = True  # these loaders resolve relative paths inside ComfyUI's input folder
+        else:
+            known = cls in IMAGE_LOADER_CLASSES
+            if not known and "loadimage" not in cls.lower():
+                continue
+            value = _inputs(node).get("image")
+            if not isinstance(value, str) or not value:
+                continue
+            if not known and not (value.startswith("blake3:") or
+                                  _ANNOTATION_RE.sub("", value).lower().endswith(IMAGE_EXTENSIONS)):
+                continue
+            refs = [parse_image_ref(value, "output" if cls == "LoadImageOutput" else "input")]
+        for ref in refs:
+            if ref["raw"] in seen:
+                continue
+            seen.add(ref["raw"])
+            ref.setdefault("external", False)
+            # True when the node is known to read this file from the folder /view
+            # serves, so a 404 there means the file was removed after queuing.
+            ref["comfyFolder"] = known and not ref["external"]
+            ref["nodeId"] = node_id
+            ref["title"] = _title(node)
+            ref["classType"] = cls
+            out.append(ref)
     return out

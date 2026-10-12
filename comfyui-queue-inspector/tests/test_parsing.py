@@ -9,7 +9,7 @@ import graphs  # noqa: E402
 from qi.adapter import QueueFormatError, parse_queue  # noqa: E402
 from qi.catalog import NodeCatalog  # noqa: E402
 from qi.extract import (  # noqa: E402
-    extract_input_images, extract_models, extract_prompts, main_models, parse_image_ref,
+    extract_input_images, extract_models, extract_prompts, main_models, parse_image_ref, used_nodes,
 )
 from qi.viewmodel import QueueViewModel  # noqa: E402
 
@@ -163,6 +163,31 @@ class ImageTests(unittest.TestCase):
              "5": graphs.node("SomeLoadImageBatch", image="not-an-image-path")}
         self.assertEqual([i["filename"] for i in extract_input_images(g)], ["a.png", "b.png", "m.png"])
         self.assertEqual(extract_input_images(graphs.sdxl_txt2img()), [])
+
+
+class UsedNodesAndMultiLoaderTests(unittest.TestCase):
+    def test_used_nodes_skip_stray(self):
+        used = used_nodes(graphs.minimax_ref2va(), ["9"])
+        self.assertNotIn("212", used)
+        self.assertNotIn("213", used)
+        self.assertIn("30", used)
+
+    def test_unknown_outputs_mean_all_nodes(self):
+        self.assertIsNone(used_nodes(graphs.minimax_ref2va(), []))
+        self.assertIsNone(used_nodes(graphs.minimax_ref2va(), ["404"]))
+
+    def test_ref2va_item(self):
+        vm = QueueViewModel()
+        payload = {"queue_running": [], "queue_pending": [
+            [1, "r", graphs.minimax_ref2va(), {}, ["9"]]]}
+        it = vm.build(payload, NO_CATALOG)[0]
+        imgs = [(i["subfolder"], i["filename"], i["external"], i["comfyFolder"]) for i in it["inputImages"]]
+        self.assertEqual(imgs, [("deno", "ref_face.png", False, True), ("", "hero.jpg", False, True),
+                                ("", "bg.png", True, False)])  # disabled one and stray #212 left out
+        self.assertEqual([m["display"] for m in it["mainModels"]], ["minimax_h3_ref2va"])  # not leftover
+        self.assertEqual(texts(it["prompts"]["positive"]), ["<Picture 1> walks into <Picture 2>"])
+        self.assertEqual(texts(it["prompts"]["negative"]), ["blurry"])
+        self.assertEqual(it["unusedNodeCount"], 2)
 
 
 class ViewModelTests(unittest.TestCase):

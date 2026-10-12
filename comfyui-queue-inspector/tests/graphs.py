@@ -94,6 +94,28 @@ def string_concat_prompt():
     }
 
 
+def minimax_ref2va():
+    """Ref2VA with Deno's multi reference loader, plus a stray Load Image (#212)
+    that feeds no output - as left behind in a shared workflow template."""
+    return {
+        "1": node("UNETLoader", unet_name="minimax_h3_ref2va.safetensors", weight_dtype="default"),
+        "2": node("CLIPLoader", clip_name="qwen3_vl_8b.safetensors", type="minimax", device="default"),
+        "4": node("VAELoader", vae_name="minimax_h3_vae.safetensors"),
+        "30": node("DenoMiniMaxH3ReferenceImageLoader", "(Deno) MiniMax H3 Multi Reference Image Loader",
+                   image_paths="deno/ref_face.png\nhero.jpg\nunused_pose.png\nD:\\Pictures\\bg.png",
+                   disabled_image_paths="unused_pose.png", audio_sources="[]"),
+        "31": node("DenoMiniMaxH3ReferenceToVideo", prompt="<Picture 1> walks into <Picture 2>",
+                   clip=["2", 0], vae=["4", 0], ref_images=["30", 0], width=1344, height=768, length=124,
+                   ref_image_size="match"),
+        "7": node("CLIPTextEncode", "Negative", text="blurry", clip=["2", 0]),
+        "3": node("KSampler", model=["1", 0], positive=["31", 0], negative=["7", 0], latent_image=["31", 1]),
+        "8": node("VAEDecode", samples=["3", 0], vae=["4", 0]),
+        "9": node("SaveVideo", video=["8", 0], filename_prefix="ref2va"),
+        "212": node("LoadImage", "Load Image", image="file_000000006c8871faaa53e993cd03ebaa.png"),
+        "213": node("UNETLoader", unet_name="leftover_model.safetensors", weight_dtype="default"),
+    }
+
+
 def _info(inputs, outputs, names=None, optional=None):
     return {
         "input": {"required": inputs, "optional": optional or {}},
