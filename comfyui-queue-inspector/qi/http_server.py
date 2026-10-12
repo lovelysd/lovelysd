@@ -114,11 +114,16 @@ def make_handler(service: QueueService):
             try:
                 status, ctype, body = service.client.get_image(filename, subfolder, img_type)
             except ComfyUnavailable:
-                return self._json(502, {"error": "Unable to reach ComfyUI"})
+                return self._json(502, {"error": "comfy_unreachable", "comfyStatus": None,
+                                        "message": "Unable to reach ComfyUI at " + service.client.base_url})
+            # Errors carry the reason so the preview can say *why* (missing file,
+            # rejected path, not an image) instead of a bare "not found".
             if status != 200:
-                return self._json(404 if status in (400, 403, 404) else 502, {"error": "Image not found"})
+                return self._json(404, {"error": "comfy_status", "comfyStatus": status,
+                                        "message": "ComfyUI /view returned HTTP %d" % status})
             if not ctype.startswith("image/"):
-                ctype = "application/octet-stream"
+                return self._json(415, {"error": "not_image", "comfyStatus": status, "contentType": ctype,
+                                        "message": "ComfyUI returned %s, not an image" % ctype})
             self._send(200, body, ctype, cache="private, max-age=60")
 
     return Handler

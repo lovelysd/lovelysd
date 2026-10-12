@@ -410,5 +410,6 @@ def extract_input_images(prompt: dict) -> List[dict]:
         ref = parse_image_ref(value, "output" if cls == "LoadImageOutput" else "input")
         ref["nodeId"] = node_id
         ref["title"] = _title(node)
+        ref["classType"] = cls
         out.append(ref)
     return out

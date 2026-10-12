@@ -11,6 +11,7 @@
   const rowsEl = $("rows");
   const rows = new Map(); // promptId -> { tr, item, statusKey }
   let version = null;
+  let comfyUrl = "";
   let pollTimer = null;
   let items = [];
 
@@ -157,6 +158,7 @@
   }
 
   function render(snap) {
+    if (snap.comfyUrl) comfyUrl = snap.comfyUrl;
     const banner = $("banner");
     const conn = $("conn");
     if (!snap.ok) {
@@ -362,9 +364,7 @@
   let previewItem = null;
 
   function imageUrl(ref) {
-    const q = new URLSearchParams({ filename: ref.filename, type: ref.type });
-    if (ref.subfolder) q.set("subfolder", ref.subfolder);
-    return "/api/image?" + q.toString();
+    return "/api/image?" + viewQuery(ref);
   }
 
   function openPreview(promptId, idx) {
@@ -375,19 +375,60 @@
     showModal("preview");
   }
 
+  // Core loaders that read from ComfyUI's input (or output) folder, i.e. the
+  // folder /view looks in. Other "LoadImage"-like nodes may use their own folder.
+  const CORE_IMAGE_LOADERS = ["LoadImage", "LoadImageMask", "LoadImageOutput"];
+
+  function viewQuery(ref) {
+    const q = new URLSearchParams({ filename: ref.filename, type: ref.type });
+    if (ref.subfolder) q.set("subfolder", ref.subfolder);
+    return q.toString();
+  }
+
+  function missingReason(ref, err) {
+    const core = CORE_IMAGE_LOADERS.includes(ref.classType);
+    if (!err) return "The inspector server did not answer.";
+    if (err.error === "comfy_unreachable") return err.message + ".";
+    if (err.error === "not_image") return err.message + ".";
+    if (err.comfyStatus === 404) {
+      return core
+        ? `ComfyUI has no file with this name in its ${ref.type} folder. ` +
+          "ComfyUI checks that the file exists when a job is queued, so it was " +
+          "probably moved, renamed or deleted after queuing."
+        : `This node (${ref.classType}) is not ComfyUI's standard Load Image, so it may ` +
+          `read the file from its own folder rather than ComfyUI's ${ref.type} folder.`;
+    }
+    if (err.comfyStatus === 400 || err.comfyStatus === 403) {
+      return `ComfyUI rejected the file path (HTTP ${err.comfyStatus}).`;
+    }
+    return err.message || "Unknown error.";
+  }
+
+  async function showMissing(stage, ref) {
+    let err = null;
+    try {
+      const res = await fetch(imageUrl(ref), { cache: "no-store" });
+      err = await res.json();
+    } catch (_) { /* server gone or not JSON */ }
+    const direct = comfyUrl ? `${comfyUrl}/view?${viewQuery(ref)}` : null;
+    stage.replaceChildren(el("div", { class: "preview-missing" },
+      el("b", { text: "Image not found" }),
+      el("span", { text: ref.raw }),
+      el("p", { class: "preview-reason", text: missingReason(ref, err) }),
+      direct ? el("a", { class: "btn", href: direct, target: "_blank", rel: "noopener",
+        text: "Open in ComfyUI" }) : null));
+  }
+
   function showPreviewImage(idx) {
     const ref = previewItem.inputImages[idx];
     $("preview-title").textContent = ref.isAsset ? ref.raw : ref.filename;
     $("preview-path").textContent =
-      `${ref.type}/${ref.subfolder ? ref.subfolder + "/" : ""}${ref.isAsset ? "" : ref.filename} · node #${ref.nodeId} (${ref.title})`;
+      `${ref.type}/${ref.subfolder ? ref.subfolder + "/" : ""}${ref.isAsset ? "" : ref.filename}` +
+      ` · node #${ref.nodeId} ${ref.classType || ""} (${ref.title})`;
     const stage = $("preview-stage");
     // Load the image only now - never while rendering the table.
     const img = el("img", { alt: ref.display, src: imageUrl(ref) });
-    img.addEventListener("error", () => {
-      stage.replaceChildren(el("div", { class: "preview-missing" },
-        el("b", { text: "Image not found" }),
-        el("span", { text: ref.raw })));
-    });
+    img.addEventListener("error", () => showMissing(stage, ref));
     stage.replaceChildren(img);
 
     const strip = $("preview-strip");

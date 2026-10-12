@@ -212,6 +212,9 @@ td.c-actions .btn + .btn { margin-left: 6px; }
 }
 .preview-missing { color: var(--muted); padding: 60px 0; text-align: center; }
 .preview-missing b { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+.preview-missing span { display: block; }
+.preview-reason { max-width: 560px; margin: 14px auto; line-height: 1.55; color: var(--text); }
+.preview-missing a.btn { display: inline-block; text-decoration: none; color: var(--text); }
 .preview-strip { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 20px 16px; }
 .preview-strip .btn.active { border-color: var(--accent); color: var(--accent); }
 

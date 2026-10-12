@@ -146,6 +146,7 @@ class ImageTests(unittest.TestCase):
         self.assertEqual(len(imgs), 1)
         self.assertEqual((imgs[0]["filename"], imgs[0]["subfolder"], imgs[0]["type"]),
                          ("face_02.png", "faces", "input"))
+        self.assertEqual(imgs[0]["classType"], "LoadImage")
 
     def test_parse_variants(self):
         r = parse_image_ref("a\\b\\c.png")

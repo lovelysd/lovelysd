@@ -48,6 +48,8 @@ class FakeClient:
         self._check()
         if filename == "face_02.png" and subfolder == "faces":
             return 200, "image/png", b"\x89PNG fake"
+        if filename == "page.png":
+            return 200, "text/html", b"<html>"
         return 404, "application/json", b""
 
 
@@ -104,8 +106,20 @@ class ServerTests(unittest.TestCase):
     def test_image_proxy(self):
         status, ctype, body = self.get("/api/image?filename=face_02.png&subfolder=faces&type=input")
         self.assertEqual((status, ctype), (200, "image/png"))
-        self.assertEqual(self.get("/api/image?filename=gone.png&type=input")[0], 404)
+        status, _, body = self.get("/api/image?filename=gone.png&type=input")
+        self.assertEqual(status, 404)
+        self.assertEqual(json.loads(body)["comfyStatus"], 404)  # reason reaches the UI
+        status, _, body = self.get("/api/image?filename=page.png&type=input")
+        self.assertEqual((status, json.loads(body)["error"]), (415, "not_image"))
         self.assertEqual(self.get("/api/image?filename=x.png&type=models")[0], 400)
+
+    def test_image_proxy_comfy_down(self):
+        self.client.up = False
+        try:
+            status, _, body = self.get("/api/image?filename=face_02.png&subfolder=faces&type=input")
+            self.assertEqual((status, json.loads(body)["error"]), (502, "comfy_unreachable"))
+        finally:
+            self.client.up = True
 
     def test_read_only_and_static(self):
         for method in ("POST", "PUT", "DELETE"):
