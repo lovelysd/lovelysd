@@ -21,7 +21,7 @@ from .viewmodel import QueueViewModel
 
 FULL_REFRESH_SECONDS = 5.0
 OBJECT_INFO_RETRY_SECONDS = 60.0
-OBJECT_INFO_FIRST_RETRY_SECONDS = 10.0  # while not loaded yet (ComfyUI still starting)
+OBJECT_INFO_FIRST_RETRY_SECONDS = 3.0  # while not loaded yet (ComfyUI still starting)
 
 
 class QueueService:
@@ -43,6 +43,7 @@ class QueueService:
         self._object_info_loading = False
         self._object_info_last_try = 0.0
         self._unknown_seen = set()  # unknown node classes that already triggered a reload
+        self.reorderer = None  # set by inspector.py when --allow-reorder is given
 
     # ---------------------------------------------------------- object_info
 
@@ -90,6 +91,13 @@ class QueueService:
             self._object_info_last_try = 0.0
             return True
         return False
+
+    def reorder(self, draft):
+        """Apply a reorder (only callable when enabled) and force a fresh read."""
+        result = self.reorderer.apply(draft)
+        with self._lock:
+            self._last_full = 0.0
+        return result
 
     # ---------------------------------------------------------- snapshot
 
@@ -147,6 +155,7 @@ class QueueService:
                 "running": running,
                 "pending": len(self._items) - running,
                 "typeInfo": self.catalog.available,
+                "reorderEnabled": self.reorderer is not None,
                 "comfyUrl": self.client.base_url,
                 "items": self._items,
             }

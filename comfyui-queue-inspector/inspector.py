@@ -41,13 +41,15 @@ def pick_comfy_url(candidates):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description="Read-only viewer for the live ComfyUI queue.")
+    p = argparse.ArgumentParser(description="Viewer for the live ComfyUI queue (read-only unless --allow-reorder).")
     p.add_argument("--comfy", default=os.environ.get("COMFYUI_URL") or None,
                    help="ComfyUI address (default: auto-detect 127.0.0.1:8188, then :8000)")
     p.add_argument("--host", default="127.0.0.1",
                    help="address to listen on (default: 127.0.0.1 = this PC only)")
     p.add_argument("--port", type=int, default=8190, help="port for the inspector page (default: 8190)")
     p.add_argument("--no-browser", action="store_true", help="do not open the browser automatically")
+    p.add_argument("--allow-reorder", action="store_true",
+                   help="enable changing the order of pending jobs (off by default: read-only)")
     args = p.parse_args(argv)
 
     if args.comfy:
@@ -56,6 +58,11 @@ def main(argv=None):
         candidates = DEFAULT_COMFY_URLS
     comfy = pick_comfy_url(candidates)
     service = QueueService(ComfyClient(comfy), candidates=candidates)
+    if args.allow_reorder:
+        from qi.reorder import Reorderer
+        backup_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backups")
+        # Uses the service's client so ComfyUI address auto-detection applies.
+        service.reorderer = Reorderer(service.client, lambda: service.catalog, backup_dir)
     service.start()
 
     try:
@@ -73,6 +80,7 @@ def main(argv=None):
     else:
         print(f"  ComfyUI : {comfy}")
     print(f"  Open    : {url}")
+    print(f"  Reorder : {'ENABLED (backups in ./backups)' if args.allow_reorder else 'off (read-only)'}")
     print("  Stop    : Ctrl+C")
 
     if not args.no_browser:

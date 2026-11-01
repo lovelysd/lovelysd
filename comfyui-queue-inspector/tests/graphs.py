@@ -116,6 +116,15 @@ def minimax_ref2va():
     }
 
 
+def api_node_job():
+    """A job using a cloud API node (cannot be re-queued: its login token is
+    not exposed by /queue)."""
+    return {
+        "1": node("CloudVideoApiNode", "Cloud Video", prompt="a cloud generated clip"),
+        "9": node("SaveVideo", video=["1", 0], filename_prefix="api"),
+    }
+
+
 def _info(inputs, outputs, names=None, optional=None):
     return {
         "input": {"required": inputs, "optional": optional or {}},
@@ -142,4 +151,5 @@ OBJECT_INFO = {
     "StringConcatenate": _info({"string_a": MULTILINE, "string_b": MULTILINE,
                                 "delimiter": ["STRING", {"multiline": False}]}, ["STRING"]),
     "SaveImage": _info({"images": ["IMAGE"], "filename_prefix": ["STRING", {"default": "ComfyUI"}]}, []),
+    "CloudVideoApiNode": dict(_info({"prompt": MULTILINE}, ["VIDEO"]), api_node=True),
 }

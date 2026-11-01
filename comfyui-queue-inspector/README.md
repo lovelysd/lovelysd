@@ -1,6 +1,7 @@
 # ComfyUI Queue Inspector
 
-ComfyUI 큐(실행 중 + 대기 중 작업)를 **읽기 전용**으로 보여주는 독립 프로그램입니다.
+ComfyUI 큐(실행 중 + 대기 중 작업)를 보여주는 독립 프로그램입니다. 기본은 **읽기 전용**이고,
+원하면 대기 작업의 **순서 변경** 기능을 켤 수 있습니다.
 ComfyUI 안에 설치하지 않으므로, ComfyUI를 업데이트·재설치해도 서로 영향이 없습니다.
 
 ![Queue table](docs/screenshot_table.png)
@@ -19,6 +20,41 @@ ComfyUI 안에 설치하지 않으므로, ComfyUI를 업데이트·재설치해�
 - **실제로 실행되는 노드만 분석**: 출력에 연결되지 않은 노드(템플릿에 남은 Load Image 등)는 ComfyUI가 실행·검사하지 않으므로 표시에서 제외
 - **Prompt**: Positive / Negative를 그래프 연결로 판별해 분리 표시, 판별할 수 없는 텍스트는 `Other prompt text`로 표시. 섹션별 Copy, Copy all
 - 다크/라이트 테마 (OS 설정을 따르고, ◐ 버튼으로 전환)
+
+## 순서 변경 (선택 기능, v0.2.0)
+
+`start_inspector_reorder.bat`으로 실행하면 켜집니다 (`start_inspector.bat`은 계속 읽기 전용).
+
+1. 오른쪽 위 **Reorder** 버튼 → 편집 모드. 이때는 ComfyUI에 아무것도 보내지 않습니다.
+2. 옮기기: 행 왼쪽 ⠿ 손잡이 **드래그**, 또는 ⤒ 맨 앞 / ▲ 위 / ▼ 아래 / ⤓ 맨 뒤 버튼.
+   체크박스로 **여러 작업을 선택**하면 함께 옮겨집니다 (Shift+클릭으로 범위 선택, 맨 위 체크박스로 전체 선택).
+3. 바뀐 행에는 `was #N`(원래 위치)이 표시되고, 위쪽에 실제로 다시 넣을 작업 수가 나옵니다.
+4. **Confirm** → 한 번에 적용, 작업별 결과 표시. **Cancel**은 편집 내용을 버립니다.
+5. **Undo last change**로 직전 변경 전 순서로 되돌릴 수 있습니다.
+
+### 동작 원리
+
+ComfyUI에는 "순서 변경" API가 없습니다. 실행 순서는 각 작업의 `number`(실수) 오름차순이므로,
+옮길 작업을 **삭제한 뒤 같은 작업을 원하는 위치의 number로 다시 넣습니다** (두 작업 사이면 중간값, 예: 3.5).
+
+- **최소 변경:** 순서가 유지된 가장 긴 묶음(최장 증가 부분수열)은 건드리지 않고 나머지만 다시 넣습니다.
+  예: 한 작업을 5칸 옮겨도 다시 넣는 작업은 1개.
+- **완전히 동일하게 다시 넣기:** `prompt_id`, 노드 그래프, 워크플로우 정보, `client_id`, `workflow_metadata`,
+  실행 대상 출력(부분 실행)까지 그대로 유지합니다. 바뀌는 것은 `number`(의도)와 `create_time`(서버가 항상 새로 기록)뿐입니다.
+  다시 넣은 직후 `/queue`를 다시 읽어 **원본과 비교 검증**하고 결과에 표시합니다.
+  (실제 ComfyUI에서 목록형 위젯·부분 실행·Queue Front 작업 등 8개를 뒤집어 비교한 결과 차이 0건)
+
+### 안전장치
+
+| 상황 | 처리 |
+|---|---|
+| 실행 중인 작업 | 이동 불가(LOCKED). 편집 중 실행이 시작되면 자동으로 잠기고 그 변경은 취소 |
+| Comfy.org API 노드를 쓰는 작업 | 이동 불가(API). 로그인 토큰이 `/queue`에 노출되지 않아 다시 넣으면 실패하기 때문 |
+| 지우는 순간 실행이 시작됨 | 삭제가 확인된 경우에만 다시 넣음 → 중복 실행 없음 |
+| 다시 넣기가 거부됨 | 원래 위치로 복구. 복구도 실패하면 백업 파일 위치 안내 |
+| 백업 | 옮기기 전 작업 내용을 `backups\` 폴더에 JSON으로 저장 |
+| 노드 정보 미로딩 | ComfyUI 시작 직후 `/object_info`가 없으면 API 노드를 구별할 수 없으므로 Reorder 버튼 비활성 |
+| 다른 웹사이트의 요청 | `/api/reorder`는 같은 출처 + 전용 헤더가 있는 요청만 받음 (CSRF 차단) |
 
 ## 설치 및 실행 (Windows 11)
 
@@ -101,7 +137,7 @@ python inspector.py --no-browser --port 8191
   KSampler·CFGGuider 등의 `positive`/`negative` 입력에서 위로 거슬러 올라가고,
   `WanImageToVideo`·`ControlNetApplyAdvanced`처럼 양쪽을 통과시키는 노드는 출력 포트 이름(positive/negative)에 맞는 입력만 따라갑니다.
   같은 텍스트가 양쪽에 쓰이면 추측하지 않고 `Other`로 보냅니다. `ConditioningZeroOut`은 "텍스트 없음"으로 표시합니다.
-- **읽기 전용 보장**: 코드에 ComfyUI로 GET 이외의 요청을 보내는 부분이 없습니다.
+- **읽기 전용 보장 (기본)**: `--allow-reorder` 없이 실행하면 ComfyUI로 쓰기 요청을 보내는 경로가 등록조차 되지 않습니다.
   Inspector 자체도 POST/PUT/DELETE를 405로 거부합니다. 기본적으로 `127.0.0.1`에만 열려 다른 PC에서는 접근할 수 없습니다.
 - **보안**: 프롬프트·파일명은 모두 `textContent`로 넣어 HTML로 해석되지 않습니다. 외부 네트워크 호출, 텔레메트리 없음.
 
@@ -113,6 +149,9 @@ python inspector.py --no-browser --port 8191
 | `GET /prompt` | 남은 작업 수 (변경 감지용, 매우 작음) |
 | `GET /object_info` | 노드 입출력 타입·이름 (시작 시 1회, 새 노드가 보이면 재조회) |
 | `GET /view?filename=&subfolder=&type=` | 입력 이미지 미리보기 (Preview 클릭 시에만) |
+| `GET /history/{id}` | (순서 변경 시) 옮기는 도중 실행됐는지 확인 |
+| `POST /queue {"delete": [...]}` | (순서 변경 시) 옮길 작업 삭제 |
+| `POST /prompt` | (순서 변경 시) 같은 작업을 새 number로 다시 넣기 |
 
 ## 알려진 한계
 
@@ -134,6 +173,7 @@ python -m unittest discover -s tests
 - `tests/test_real_fixture.py`: **실제 ComfyUI(2026-10-05 master)에서 캡처한** `/queue`·`/object_info` 데이터로 검증
 - `tests/test_server.py`: HTTP API, 읽기 전용(405), 이미지 중계, ComfyUI 꺼짐 상태, 경로 탐색 차단
 - `tests/test_discovery.py`: ComfyUI 주소 자동 감지 (8188 ↔ 8000 전환)
+- `tests/test_reorder.py`: 순서 계획(최소 이동, 고정 작업, 번호 충돌·정밀도), 동일성 검증, 실행 시작·거부·API 작업 처리, CSRF
 
 ComfyUI 없이 화면을 확인하려면 모의 서버를 쓸 수 있습니다.
 

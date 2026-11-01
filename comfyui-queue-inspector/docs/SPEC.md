@@ -193,12 +193,67 @@ comfyui-queue-inspector/
 Runs with ComfyUI portable's embedded Python. Its `._pth` file disables adding
 the script directory to `sys.path`, so `inspector.py` adds the directory itself.
 
-## 12. Phase 2 candidates
+## 12. Reorder (v0.2.0, opt-in) **[new]**
+
+Enabled only with `--allow-reorder` (`start_inspector_reorder.bat`).
+Without it the write route is not registered.
+
+**UI.** The **Reorder** button opens an edit mode. Nothing is sent while
+editing; **Confirm** applies the final order and **Cancel** discards it.
+
+- Moving: drag the ⠿ handle, or use ⤒ ▲ ▼ ⤓ (front / up / down / back).
+- Multi-select: checkboxes, Shift+click for a range, and a select-all box.
+  Moving one selected row moves the whole selection, keeping its relative order.
+- Locked rows: running jobs (LOCKED) and jobs using cloud API nodes (API).
+  Jobs queued during editing appear marked NEW.
+- Change markers: changed rows show `was #N`, and the header shows how many
+  jobs will actually be re-queued.
+- After Confirm: a per-job result modal. **Undo last change** restores the
+  previous order.
+
+**Mechanism.** ComfyUI has no move API. Execution order is ascending `number`
+(a float). A job is moved by deleting it and queuing the identical job again
+with a new number: the midpoint between its new neighbours.
+
+**Minimal changes.** The longest run of jobs whose relative order is unchanged
+(the longest increasing subsequence) stays in place; only the other jobs are
+re-queued.
+- Pinned jobs (API-node jobs, and jobs the draft does not mention) are forced
+  into the kept set.
+- A new number never ties with an existing one.
+- If repeated insertions make a gap too small, a neighbour is moved too, which
+  restores a wide gap.
+
+**Faithful re-queue** (verified against ComfyUI 2026-11):
+
+- `prompt_id` is reused.
+- Validation edits the queued prompt in place: it unwraps
+  `{"__value__": [...]}` list values into bare lists, which would read as
+  links on a second validation. Non-link lists are re-wrapped, but only in
+  nodes that feed the outputs. Re-submitting without this is rejected; this
+  was confirmed on a real ComfyUI.
+- `outputs_to_execute` is sent as `partial_execution_targets`, so a job queued
+  for some outputs only stays a partial run.
+- `extra_data` is sent back as is. `workflow_metadata` and `client_id` are also
+  sent at the top level, because the server rebuilds them from there.
+- Only `create_time` changes, because the server always stamps it.
+- Each move is verified by reading `/queue` back and comparing the result with
+  the original.
+
+**Safety.**
+- A backup JSON file is written before each delete.
+- Before re-queuing, the job is confirmed deleted (not running) and absent
+  from `/history`, so nothing runs twice.
+- If re-queuing is rejected, the job is restored at its old number.
+- The first hard failure stops the run.
+- Reorder is refused until `/object_info` has loaded, because API-node jobs
+  cannot be recognised without it.
+- `/api/reorder` accepts only same-origin JSON requests that carry the
+  `X-Queue-Inspector` header (CSRF protection).
+
+## 13. Later candidates
 
 - Native window
 - Search and filter by model, prompt or filename
 - Video input preview
 - Snapshot export
-- Optional cancel controls, behind an explicit opt-in
-
-Not in v1.

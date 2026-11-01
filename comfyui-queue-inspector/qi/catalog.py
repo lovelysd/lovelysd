@@ -28,6 +28,14 @@ class NodeCatalog:
     def knows(self, class_type: str) -> bool:
         return isinstance(self._info.get(class_type), dict)
 
+    def is_api_node(self, class_type: str) -> Optional[bool]:
+        """True for nodes that call a paid cloud API (they need the login token
+        ComfyUI keeps out of /queue, so such jobs cannot be re-queued)."""
+        info = self._info.get(class_type)
+        if not isinstance(info, dict):
+            return None
+        return bool(info.get("api_node"))
+
     def output_names(self, class_type: str) -> Optional[List[str]]:
         info = self._info.get(class_type)
         if not isinstance(info, dict):

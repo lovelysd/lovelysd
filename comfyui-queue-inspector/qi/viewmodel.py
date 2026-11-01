@@ -43,6 +43,11 @@ def build_details(raw: RawQueueItem, catalog: NodeCatalog) -> Dict[str, Any]:
         images = []
         warnings.append(f"image extraction failed: {exc}")
 
+    api_nodes = sorted({
+        n.get("class_type") for k, n in raw.prompt.items()
+        if isinstance(n, dict) and (used is None or str(k) in used)
+        and isinstance(n.get("class_type"), str) and catalog.is_api_node(n["class_type"])
+    })
     create_time = raw.extra_data.get("create_time")
     return {
         "promptId": raw.prompt_id,
@@ -55,6 +60,7 @@ def build_details(raw: RawQueueItem, catalog: NodeCatalog) -> Dict[str, Any]:
         "models": models,
         "inputImages": images,
         "prompts": prompts,
+        "apiNodes": api_nodes,  # jobs using cloud API nodes cannot be re-queued (reorder)
         "warnings": warnings,
     }
 

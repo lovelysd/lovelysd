@@ -7,9 +7,13 @@ Routes
   GET /api/queue?force=1   -> same, but re-read ComfyUI immediately (manual refresh)
   GET /api/image?filename=&subfolder=&type=  -> proxied ComfyUI /view (input preview)
   GET /api/info            -> ComfyUI URL and version info
+  POST /api/reorder        -> {"order": [prompt_id, ...]}  ONLY with --allow-reorder
 
-Everything else returns 404/405. No route forwards anything that could
-modify ComfyUI.
+Without --allow-reorder every non-GET request gets 405, so nothing can modify
+ComfyUI. With it, /api/reorder is the single state-changing route; it only
+accepts same-origin JSON requests carrying the X-Queue-Inspector header
+(a cross-site page cannot send that header without a CORS preflight, which
+this server never approves), so other websites cannot trigger it.
 """
 
 from __future__ import annotations
@@ -82,9 +86,42 @@ def make_handler(service: QueueService):
                 pass
 
         def do_POST(self):
+            path = urllib.parse.urlsplit(self.path).path
+            if path == "/api/reorder" and service.reorderer is not None:
+                try:
+                    return self._reorder()
+                except (BrokenPipeError, ConnectionResetError):
+                    return
             self._json(405, {"error": "read-only"})
 
-        do_PUT = do_DELETE = do_PATCH = do_POST
+        def _not_allowed(self):
+            self._json(405, {"error": "read-only"})
+
+        do_PUT = do_DELETE = do_PATCH = do_OPTIONS = _not_allowed
+
+        def _same_origin(self) -> bool:
+            if self.headers.get("X-Queue-Inspector") != "1":
+                return False
+            if not (self.headers.get("Content-Type") or "").startswith("application/json"):
+                return False
+            origin = self.headers.get("Origin")
+            host = self.headers.get("Host")
+            return origin is None or (host is not None and origin == "http://" + host)
+
+        def _reorder(self):
+            if not self._same_origin():
+                return self._json(403, {"error": "forbidden"})
+            length = int(self.headers.get("Content-Length") or 0)
+            if length <= 0 or length > 1_000_000:
+                return self._json(400, {"error": "bad request"})
+            try:
+                data = json.loads(self.rfile.read(length).decode("utf-8"))
+            except ValueError:
+                return self._json(400, {"error": "bad request"})
+            order = data.get("order") if isinstance(data, dict) else None
+            if not isinstance(order, list) or not all(isinstance(x, str) for x in order):
+                return self._json(400, {"error": "order must be a list of prompt ids"})
+            self._json(200, service.reorder(order))
 
         # -------------------------------------------------- handlers
 

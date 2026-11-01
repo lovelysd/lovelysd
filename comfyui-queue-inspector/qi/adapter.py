@@ -78,8 +78,9 @@ def _parse_item(item: Any, status: str) -> Optional[RawQueueItem]:
 
 
 def _sort_key(item: RawQueueItem):
-    # Items without a number go last but keep their relative order (sort is stable).
-    return (item.number is None, item.number if item.number is not None else 0)
+    # The heap compares whole tuples, so equal numbers are ordered by prompt_id.
+    # Items without a number go last.
+    return (item.number is None, item.number if item.number is not None else 0, item.prompt_id)
 
 
 def parse_queue(payload: Any) -> List[RawQueueItem]:

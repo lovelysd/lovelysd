@@ -38,6 +38,8 @@ def required(path):
 def why(path):
     if required(path):
         return "required"
+    if path.endswith(".bat"):
+        return "launcher"
     if path.startswith("tests/"):
         return "tests only"
     if path.startswith("tools/"):

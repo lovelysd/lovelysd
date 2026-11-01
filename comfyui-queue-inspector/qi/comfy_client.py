@@ -1,9 +1,10 @@
-"""Minimal read-only HTTP client for the local ComfyUI server.
+"""Minimal HTTP client for the local ComfyUI server.
 
-Only GET requests exist in this module on purpose: the inspector must never
-change the queue. Python's urllib sends no Origin header, so ComfyUI's
-origin-check middleware (which rejects cross-origin browser requests) does
-not apply - this is why the browser talks to us and we talk to ComfyUI.
+Reading uses GET only. `post_json` exists solely for the opt-in reorder
+feature (qi/reorder.py, --allow-reorder); nothing else calls it. Python's
+urllib sends no Origin header, so ComfyUI's origin-check middleware (which
+rejects cross-origin browser requests) does not apply - this is why the
+browser talks to us and we talk to ComfyUI.
 """
 
 from __future__ import annotations
@@ -41,6 +42,22 @@ class ComfyClient:
             return exc.code, dict(exc.headers or {}), b""
         except (urllib.error.URLError, OSError, ValueError) as exc:
             raise ComfyUnavailable(str(exc)) from exc
+
+    def post_json(self, path: str, data: Any, timeout=None) -> Tuple[int, Any]:
+        """POST a JSON body; returns (HTTP status, parsed JSON body or None)."""
+        req = urllib.request.Request(self._url(path), data=json.dumps(data).encode("utf-8"), method="POST",
+                                     headers={"User-Agent": USER_AGENT, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout or max(self.timeout, 30.0)) as resp:
+                status, body = resp.status, resp.read()
+        except urllib.error.HTTPError as exc:
+            status, body = exc.code, exc.read() if exc.fp else b""
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            raise ComfyUnavailable(str(exc)) from exc
+        try:
+            return status, json.loads(body.decode("utf-8")) if body else None
+        except ValueError:
+            return status, None
 
     def get_json(self, path: str, timeout=None) -> Any:
         status, _, body = self._get(path, timeout=timeout)

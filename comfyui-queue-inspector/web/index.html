@@ -14,6 +14,13 @@
       <span class="counts" id="counts">—</span>
     </div>
     <div class="bar-right">
+      <span class="edit-bar edit-only" id="edit-bar">
+        <span class="edit-label" id="edit-label">Editing order</span>
+        <button class="btn" id="edit-cancel">Cancel</button>
+        <button class="btn primary" id="edit-confirm" disabled>Confirm</button>
+      </span>
+      <button class="btn view-only" id="undo-btn" hidden title="Restore the order before the last confirmed change">Undo last change</button>
+      <button class="btn view-only" id="reorder-btn" hidden title="Change the order of pending jobs">Reorder</button>
       <span class="conn" id="conn" title="Connection to ComfyUI"><i></i><span id="conn-text">Connecting…</span></span>
       <span class="muted" id="updated"></span>
       <button class="icon-btn" id="theme-btn" title="Toggle theme" aria-label="Toggle theme">◐</button>
@@ -26,6 +33,7 @@
     <table class="queue" id="queue">
       <thead>
         <tr>
+          <th class="c-sel edit-only"><input type="checkbox" id="sel-all" title="Select all movable jobs" aria-label="Select all"></th>
           <th class="c-order">#</th>
           <th class="c-status">Status</th>
           <th class="c-id">Prompt ID</th>
@@ -72,6 +80,20 @@
       </div>
       <div class="preview-stage" id="preview-stage"></div>
       <div class="preview-strip" id="preview-strip"></div>
+    </div>
+  </div>
+
+  <!-- Reorder result modal -->
+  <div class="modal-backdrop" id="result" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="modal-head">
+        <div>
+          <h2 id="result-title">Reorder result</h2>
+          <div class="muted small" id="result-summary"></div>
+        </div>
+        <button class="icon-btn" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" id="result-body"></div>
     </div>
   </div>
 
